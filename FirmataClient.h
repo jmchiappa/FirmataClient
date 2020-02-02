@@ -55,6 +55,7 @@ void reportAnalogCallback(byte analogPin, int value);
 void reportDigitalCallback(byte port, int value);
 void sysexCallback(byte command, byte argc, byte *argv);
 void systemResetCallback();
+uint8_t decodeByteStream(size_t bytec, uint8_t * bytev);
 #ifdef __cplusplus
 }
 #endif
