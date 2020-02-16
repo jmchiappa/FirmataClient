@@ -51,9 +51,9 @@
 
 // #define PROXISENSOR_VL6180X
 //#define PROXISENSOR_VL53L0X
-// #define STM_STEPPER
+//#define STM_STEPPER
 #define WS2812_SCREEN
-//#define TCS34725_COLORVIEW
+#define TCS34725_COLORVIEW
 //#define LSM6DSL_ACCGYR
 
 
@@ -68,6 +68,7 @@
 // End of feature definition
 
 #ifdef PROXISENSOR_VL6180X
+#pragma message ( "VL6180X library selected" )
 #include <VL6180X.h>
 VL6180X ProximitySensor;
 #endif
@@ -80,28 +81,35 @@ TwoWire WIRE1(PB11, PB10);  //SDA=PB11 & SCL=PB10
 #endif
 
 #ifdef PROXISENSOR_VL53L0X
+#pragma message ( "VL53l0X library selected" )
 #include <vl53l0x_class.h>
 VL53L0X ProximitySensor(&WIRE1, PC6, PC7); //XSHUT=PC6 & INT=PC7
 #endif
 
 #ifdef STM_STEPPER
+#pragma message ( "stepper library selected" )
 #include <Stepper.h>
 Stepper MoteurGauche;
 Stepper MoteurDroite;
+#else
+#pragma message ( "stepper library not selected" )
 #endif
 
 #ifdef WS2812_SCREEN
+#pragma message ( "ws2812b library selected" )
 #include <ws2812.h>
 WS2812B WS2812Screen;
 static uint8_t BitmapBuffer[MATRIX_NB_COLUMN * MATRIX_NB_ROW * 4];
 #endif
 
 #ifdef TCS34725_COLORVIEW
+#pragma message ( "tcs34725 library selected" )
 #include "Adafruit_TCS34725.h"
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X,NON_BLOCKING,SDA,SCL);
 #endif
 
 #ifdef LSM6DSL_ACCGYR
+#pragma message ( "LSM6DSL library selected" )
 #include "LSM6DSLSensor.h"
 LSM6DSLSensor *AccGyr;
 // TwoWire *dev_i2c;
@@ -824,7 +832,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
       // Serial1.println();
       switch(argv[0])
       {
-        case 0x00:
+        case 0x00: {
           // data[2] : Nb step per rotation droite MSB
           // data[3] : nb step LSB
           // data[3] : EnaMoteurDroite
@@ -850,8 +858,8 @@ void sysexCallback(byte command, byte argc, byte *argv)
           setPinModeCallback(argv[12], OUTPUT); //DirGauche
           setPinModeCallback(argv[13], OUTPUT); //M0Gauche
           setPinModeCallback(argv[14], OUTPUT); //M1Gauche
-          nbStepR=(((uint16_t)argv[1])<<8) | ((uint16_t)argv[2]);
-          nbStepL=(((uint16_t)argv[8])<<8) | ((uint16_t)argv[9]);
+          uint16_t nbStepR=(((uint16_t)argv[1])<<8) | ((uint16_t)argv[2]);
+          uint16_t nbStepL=(((uint16_t)argv[8])<<8) | ((uint16_t)argv[9]);
           // Serial1.print("step droit=");
           // Serial1.println(nbStepR);
           // Serial1.print("step gauche=");
@@ -861,7 +869,9 @@ void sysexCallback(byte command, byte argc, byte *argv)
           // StepMotor_Test();  
 
           break;
-        case 0x01 : // déplacement en nombre de pas
+        }
+        case 0x01: {
+          // déplacement en nombre de pas
           // data[2] : moteur : 0 : droite / 1 : gauche
           // data[3] : num steps, bits 0-6
           // data[4] : num steps, bits 7-13
@@ -884,7 +894,9 @@ void sysexCallback(byte command, byte argc, byte *argv)
             // MoteurGauche.Move(1200);
           }
           break;
-        case 0x02: // Restart
+        }
+        case 0x02: {
+          // Restart
           // Serial1.print("m=");
           // Serial1.print(argv[1]);
           if(argv[1]==0)
@@ -897,7 +909,9 @@ void sysexCallback(byte command, byte argc, byte *argv)
           }
 
           break;
-        case 0x03 : // Set speed motor
+        }
+        case 0x03 : {
+          // Set speed motor
           // Serial1.print("m=");
           // Serial1.print(argv[1]);
           // Serial1.print(" s=");
@@ -913,7 +927,8 @@ void sysexCallback(byte command, byte argc, byte *argv)
             // MoteurGauche.SetSpeed(300);
           }
           break;
-        case 0x04 : // SetDirPolarity
+        }
+        case 0x04 : { // SetDirPolarity
           // Serial1.print("polarity=");
           // Serial1.println( *(uint8_t *)(&argv[2]) );
           if(argv[1]==0)
@@ -925,7 +940,8 @@ void sysexCallback(byte command, byte argc, byte *argv)
             MoteurGauche.SetDirPolarity(argv[2]);
           }
           break;
-        case 0x05 : // Stop immediately
+        }
+        case 0x05 : {// Stop immediately
           // Serial1.print("stop motor ");
           // Serial1.println( *(uint8_t *)(&argv[1]) );
           if(argv[1]==0)
@@ -937,7 +953,8 @@ void sysexCallback(byte command, byte argc, byte *argv)
             MoteurGauche.Stop();
           }
           break;
-        case 0x06 : //Deactivate
+        }
+        case 0x06 : {//Deactivate
           // Serial1.print("deactivate motor ");
           // Serial1.println( *(uint8_t *)(&argv[1]) );
           if(argv[1]==0)
@@ -949,6 +966,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
             MoteurGauche.Deactivate();
           }
           break;
+        }
         default:
           // Serial1.println("unknown step motor command");
           break;
@@ -1073,8 +1091,10 @@ void systemResetCallback()
 #endif
 
 #ifdef TCS34725_COLORVIEW
-  if(!tcs.begin())
+  if(!tcs.begin()){
     WS2812Screen.SetPixelAt(4,0,0,255,255,0,0);
+    
+  }
 #endif
 
 #if defined(PROXISENSOR_VL53L0X) || defined(LSM6DSL_ACCGYR)
