@@ -50,11 +50,11 @@
 // Select any define below to activate some sysex commands
 
 // #define PROXISENSOR_VL6180X
-//#define PROXISENSOR_VL53L0X
+#define PROXISENSOR_VL53L0X
 //#define STM_STEPPER
 #define WS2812_SCREEN
 #define TCS34725_COLORVIEW
-//#define LSM6DSL_ACCGYR
+#define LSM6DSL_ACCGYR
 
 
 #if defined(PROXISENSOR_VL53L0X) && defined(PROXISENSOR_VL6180X)
@@ -105,7 +105,7 @@ static uint8_t BitmapBuffer[MATRIX_NB_COLUMN * MATRIX_NB_ROW * 4];
 #ifdef TCS34725_COLORVIEW
 #pragma message ( "tcs34725 library selected" )
 #include "Adafruit_TCS34725.h"
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X,NON_BLOCKING,SDA,SCL);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X,NON_BLOCKING, SDA,SCL);
 #endif
 
 #ifdef LSM6DSL_ACCGYR
@@ -1085,9 +1085,14 @@ void systemResetCallback()
 #endif
 
 
-#ifdef PROXISENSOR_VL6180X
+// #ifdef PROXISENSOR_VL6180X
+//   enableI2CPins();
+//   Wire.begin();
+// #endif
+
+#if defined(PROXISENSOR_VL6180X) || defined(PROXISENSOR_VL53L0X) || defined(LSM6DSL_ACCGYR) || defined(TCS34725_COLORVIEW)
   enableI2CPins();
-  Wire.begin();
+  WIRE1.begin();
 #endif
 
 #ifdef TCS34725_COLORVIEW
@@ -1095,10 +1100,6 @@ void systemResetCallback()
     WS2812Screen.SetPixelAt(4,0,0,255,255,0,0);
     
   }
-#endif
-
-#if defined(PROXISENSOR_VL53L0X) || defined(LSM6DSL_ACCGYR)
-  WIRE1.begin();
 #endif
 
 #ifdef PROXISENSOR_VL53L0X
