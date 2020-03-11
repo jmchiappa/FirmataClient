@@ -21,6 +21,12 @@
 #define I2C_MAX_QUERIES             8
 #define I2C_REGISTER_NOT_SPECIFIED  -1
 
+#define SYSEX_CMD_PROXIMITY	0x01 //
+#define SYSEX_CMD_STEPPER  	0x02 //
+#define SYSEX_CMD_STRIPLED 	0x03 //
+#define SYSEX_CMD_COLOR    	0x04 //
+#define PERIPHERAL_OPT			0x40 // dedicated respopnse for CAPABILITY_QUERY message (pin mode table)
+
 // the minimum interval for sampling analog input
 #define MINIMUM_SAMPLING_INTERVAL   1
 
