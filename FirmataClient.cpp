@@ -773,7 +773,7 @@ void systemResetCallback()
     servoPinMap[i] = 255;
   }
 
-
+  reset_callback_extended();
   // by default, do not report any analog inputs
   analogInputsToReport = 0;
 
