@@ -382,10 +382,13 @@ void sysex_callback_extended(byte command, byte argc, byte *argv){
     }
     u8g2.sendBuffer();
     break;
-  }
   #endif
+  }
 }
 
+bool is_pin_protected(uint8_t p){
+  return (p==D12);
+}
 
 extern void enableI2CPins(void);
 
