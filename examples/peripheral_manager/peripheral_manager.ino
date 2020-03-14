@@ -361,18 +361,19 @@ void sysex_callback_extended(byte command, byte argc, byte *argv){
 */
     argv = &(argv[1]);  // supprime le deuxième byte inutile de la commande qui est argv[0] 
     argc=decodeByteStream(argc,argv); // decode le stream
-//    pinMode(13,OUTPUT);
+    pinMode(13,OUTPUT);
 /*    for(uint8_t i=0;i<16;i++)
       dbg.println((int)argv[i]);
 */
     u8g2.clearBuffer();
-    switch(argv[1]) {
+//    digitalWrite(13, HIGH);
+    switch(argv[0]) {
       case 0 : // affiche du texte
         uint8_t y = 15;
-        uint8_t len = argv[2];
-        argv[3+len]=0; // end of line 
-        String s = (char*) &argv[3]; // pointer to start of string
-        for(uint8_t n=0;n<50;n+=12){
+        uint8_t len = argv[1];
+//        argv[2+len]=0; // end of line 
+        String s = (char*) &argv[2]; // pointer to start of string
+        for(uint8_t n=0;n<50;n+=10){
           if(n<len)
             u8g2.drawStr(0, y, s.substring(n,min( (int)len, (int)(n+10))).c_str() );
           y+=18;
@@ -481,7 +482,7 @@ void execute_extended(void) {
 
 
 void setup() {
-    firmata_begin(SerialFirmata,57600);
+    firmata_begin(SerialFirmata,115200);
 }
 
 void loop() {

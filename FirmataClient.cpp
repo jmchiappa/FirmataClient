@@ -291,7 +291,7 @@ void checkDigitalInputs(void)
  */
 void setPinModeCallback(byte pin, int mode)
 {
-  if (Firmata.getPinMode(pin) == PIN_MODE_IGNORE)
+  if ( (Firmata.getPinMode(pin) == PIN_MODE_IGNORE) || is_pin_protected(pin) )
     return;
 
   if (Firmata.getPinMode(pin) == PIN_MODE_I2C && isI2CEnabled && mode != PIN_MODE_I2C) {
@@ -662,33 +662,39 @@ void sysexCallback(byte command, byte argc, byte *argv)
       Firmata.write(START_SYSEX);
       Firmata.write(CAPABILITY_RESPONSE);
       for (byte pin = 0; pin < TOTAL_PINS; pin++) {
-        if (IS_PIN_DIGITAL(pin)) {
-          Firmata.write((byte)INPUT);
-          Firmata.write(1);
-          Firmata.write((byte)PIN_MODE_PULLUP);
-          Firmata.write(1);
-          Firmata.write((byte)OUTPUT);
-          Firmata.write(1);
+
+        if(!is_pin_protected(pin) ) {
+
+          if (IS_PIN_DIGITAL(pin)) {
+            Firmata.write((byte)INPUT);
+            Firmata.write(1);
+            Firmata.write((byte)PIN_MODE_PULLUP);
+            Firmata.write(1);
+            Firmata.write((byte)OUTPUT);
+            Firmata.write(1);
+          }
+          if (IS_PIN_ANALOG(pin)) {
+            Firmata.write(PIN_MODE_ANALOG);
+            Firmata.write(10); // 10 = 10-bit resolution
+          }
+          if (IS_PIN_PWM(pin)) {
+            Firmata.write(PIN_MODE_PWM);
+            Firmata.write(DEFAULT_PWM_RESOLUTION);
+          }
+          if (IS_PIN_DIGITAL(pin)) {
+            Firmata.write(PIN_MODE_SERVO);
+            Firmata.write(14);
+          }
+          if (IS_PIN_I2C(pin)) {
+            Firmata.write(PIN_MODE_I2C);
+            Firmata.write(1);  // TODO: could assign a number to map to SCL or SDA
+          }
+  #ifdef FIRMATA_SERIAL_FEATURE
+          serialFeature.handleCapability(pin);
+  #endif
+
         }
-        if (IS_PIN_ANALOG(pin)) {
-          Firmata.write(PIN_MODE_ANALOG);
-          Firmata.write(10); // 10 = 10-bit resolution
-        }
-        if (IS_PIN_PWM(pin)) {
-          Firmata.write(PIN_MODE_PWM);
-          Firmata.write(DEFAULT_PWM_RESOLUTION);
-        }
-        if (IS_PIN_DIGITAL(pin)) {
-          Firmata.write(PIN_MODE_SERVO);
-          Firmata.write(14);
-        }
-        if (IS_PIN_I2C(pin)) {
-          Firmata.write(PIN_MODE_I2C);
-          Firmata.write(1);  // TODO: could assign a number to map to SCL or SDA
-        }
-#ifdef FIRMATA_SERIAL_FEATURE
-        serialFeature.handleCapability(pin);
-#endif
+
         Firmata.write(127);
       }
       // add extra value
