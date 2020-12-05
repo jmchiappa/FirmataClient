@@ -701,7 +701,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
       Firmata.write(PERIPHERAL_OPT);
       // send registered devices
 			Firmata.sendValueAsTwo7bitBytes(getRegisteredPeripheral());
-			Firmata.write(127);
+			// Firmata.write(127); // Do not send end of record
 
 
       Firmata.write(END_SYSEX);
