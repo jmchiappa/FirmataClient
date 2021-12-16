@@ -26,6 +26,7 @@
 #define SYSEX_CMD_STRIPLED 	0x03 //
 #define SYSEX_CMD_COLOR    	0x04 //
 #define SYSEX_CMD_OLED			0x05 //
+#define SYSEX_CMD_ANALOGUE_STM32      0x06 //
 #define PERIPHERAL_OPT			0x40 // dedicated respopnse for CAPABILITY_QUERY message (pin mode table)
 
 // the minimum interval for sampling analog input

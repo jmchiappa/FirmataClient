@@ -515,6 +515,13 @@ void sysexCallback(byte command, byte argc, byte *argv)
   unsigned int delayTime;
 
   switch (command) {
+    case SYSEX_CMD_ANALOGUE_STM32:
+      PinName pin = (argv[1] << 7) & argv[0];
+      int val = argv[3] << 7 & argv[2];
+      if (IS_PIN_PWM(pin))
+        analogWrite(PIN_TO_PWM(pin), value);
+      Firmata.setPinState(pin, value);
+      break;
     case I2C_REQUEST:
       mode = argv[1] & I2C_READ_WRITE_MODE_MASK;
       if (argv[1] & I2C_10BIT_ADDRESS_MODE_MASK) {
