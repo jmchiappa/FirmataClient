@@ -66,6 +66,9 @@ uint16_t getRegisteredPeripheral(void) __attribute__((weak));
 // #### SYSEX COMMAND EXTENSION
 // ################################
 
+// store alternate value for extended STM32 PWM configuration (as PB7_ALT1)
+// value is MSB of ALT1 (0x0100), ALT2 (0x0200), etc.
+byte altConfig[TOTAL_PINS];
 
 #ifdef FIRMATA_SERIAL_FEATURE
 SerialFirmata serialFeature;
@@ -741,6 +744,20 @@ void sysexCallback(byte command, byte argc, byte *argv)
 #ifdef FIRMATA_SERIAL_FEATURE
       serialFeature.handleSysex(command, argc, argv);
 #endif
+      break;
+    /**
+     * this command allows to send alternates pin umber as defined in pinMamp TIM
+     * in stm32duino v2.x
+     * structure :
+     *  0 - pin number
+     *  1 - alternate value 0xYY
+     */
+    case SYSEX_ALT_CONFIG:
+      if(argv[0]<TOTAL_PINS){
+        altConfig[argv[0]] = argv[1];
+        DEBUG_PRINT(String("mode ALT pin ")+String(argv[0])+String(" - alt ")+String(argv[1]));
+
+      }
       break;
   	default :
   		sysex_callback_extended(command,argc,argv);
