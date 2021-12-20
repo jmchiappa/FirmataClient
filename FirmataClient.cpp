@@ -46,6 +46,14 @@
 
 #include "FirmataClient.h"
 
+#define DEBUG
+
+#ifdef DEBUG
+# define DEBUG_PRINT(s)  Firmata.sendString(String(s).c_str())
+#else
+# define DEBUG_PRINT(s)
+#endif
+
 // hook for optional peripherals
 // setup routine for each peripheral
 void reset_callback_extended(void) __attribute__((weak));
@@ -360,8 +368,10 @@ void setPinModeCallback(byte pin, int mode)
       break;
     case PIN_MODE_PWM:
       if (IS_PIN_PWM(pin)) {
-        pinMode(PIN_TO_PWM(pin), OUTPUT);
-        analogWrite(PIN_TO_PWM(pin), 0);
+        uint32_t extendedPin = altConfig[pin]<<7 | PIN_TO_PWM(pin);
+        DEBUG_PRINT("mode PWM pin "+String(extendedPin));
+        pinMode(extendedPin, OUTPUT);
+        analogWrite(extendedPin, 0);
         Firmata.setPinMode(pin, PIN_MODE_PWM);
       }
       break;
@@ -411,6 +421,7 @@ void setPinValueCallback(byte pin, int value)
 
 void analogWriteCallback(byte pin, int value)
 {
+  uint32_t pinNb;
   if (pin < TOTAL_PINS) {
     switch (Firmata.getPinMode(pin)) {
       case PIN_MODE_SERVO:
@@ -419,8 +430,21 @@ void analogWriteCallback(byte pin, int value)
         Firmata.setPinState(pin, value);
         break;
       case PIN_MODE_PWM:
-        if (IS_PIN_PWM(pin))
-          analogWrite(PIN_TO_PWM(pin), value);
+        if (IS_PIN_PWM(pin)){
+          if(altConfig[pin]>0){
+            // if alternate name has been selected, then construct PYx_ALTn name
+            if(IS_PIN_ANALOG(pin)) {
+              // pin number MUST BE in STM32 space (PNUM_ANALOG_BASE + analog pin number)
+              pinNb = altConfig[pin]<<8 | (PIN_TO_ANALOG(pin) + PNUM_ANALOG_BASE);
+            }else{
+            pinNb = altConfig[pin]<<8 | PIN_TO_PWM(pin);
+            }
+          }else {
+            pinNb = PIN_TO_PWM(pin);
+          }
+          DEBUG_PRINT("write analog pin 0x"+String(pinNb,HEX));
+          analogWrite(pinNb, value);
+        }
         Firmata.setPinState(pin, value);
         break;
     }
@@ -516,15 +540,10 @@ void sysexCallback(byte command, byte argc, byte *argv)
   byte data;
   int slaveRegister;
   unsigned int delayTime;
+  PinName pin;
+  int value;
 
   switch (command) {
-    case SYSEX_CMD_ANALOGUE_STM32:
-      PinName pin = (argv[1] << 7) & argv[0];
-      int val = argv[3] << 7 & argv[2];
-      if (IS_PIN_PWM(pin))
-        analogWrite(PIN_TO_PWM(pin), value);
-      Firmata.setPinState(pin, value);
-      break;
     case I2C_REQUEST:
       mode = argv[1] & I2C_READ_WRITE_MODE_MASK;
       if (argv[1] & I2C_10BIT_ADDRESS_MODE_MASK) {
@@ -821,6 +840,8 @@ void systemResetCallback()
   }
   */
   isResetting = false;
+
+  DEBUG_PRINT("firmata is ready");  
 }
 
 void firmata_begin(HardwareSerial &serial,uint32_t Baudrate)
